@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "Cloud-synced Match-3 player save profile, 360-level stars, and deluxe booster inventory.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the player."
+        },
+        "playerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Display name shown in the lobby profile bar."
+        },
+        "avatarId": {
+          "type": "string",
+          "enum": ["princess", "crown", "gummy", "lollipop"],
+          "description": "Selected royal avatar identifier."
+        },
+        "lives": {
+          "type": "integer",
+          "description": "Current heart count (0 to 5)."
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Accumulated player experience points."
+        },
+        "unlockedLevel": {
+          "type": "integer",
+          "description": "Highest unlocked campaign level (1 to 360)."
+        },
+        "coins": {
+          "type": "integer",
+          "description": "Current gold coin balance."
+        },
+        "levelStars": {
+          "type": "object",
+          "description": "Map of levelId to earned stars (0 to 3)."
+        },
+        "levelHighScores": {
+          "type": "object",
+          "description": "Map of levelId to highest score achieved."
+        },
+        "boosters": {
+          "type": "object",
+          "description": "Counts for hammer, free_switch, color_bomb, cross_wand, and sugar_shuffle."
+        },
+        "preBoosters": {
+          "type": "object",
+          "description": "Counts for striped_wrapped, color_bomb, extra_moves, and golden_crown."
+        },
+        "soundEnabled": {
+          "type": "boolean"
+        },
+        "musicEnabled": {
+          "type": "boolean"
+        },
+        "endlessBestWave": {
+          "type": "integer"
+        },
+        "endlessBestScore": {
+          "type": "integer"
+        },
+        "claimedRewards": {
+          "type": "array",
+          "description": "Claimed milestone reward IDs."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "playerName",
+        "avatarId",
+        "lives",
+        "xp",
+        "unlockedLevel",
+        "coins",
+        "levelStars",
+        "levelHighScores",
+        "boosters",
+        "preBoosters",
+        "soundEnabled",
+        "musicEnabled",
+        "endlessBestWave",
+        "endlessBestScore",
+        "claimedRewards",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProgress" },
+      "description": "Per-user cloud save document keyed by verified Firebase Auth UID."
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Sugar Crown",
+  "description": "An ultra-polished Match-3 puzzle adventure across Sugar Meadow, Caramel Canyon, and Crystal Glacier with cascading combos, special candies, and procedural endless mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

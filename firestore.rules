@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isSignedIn()
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
+    }
+
+    function isValidUserSave(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'playerName', 'avatarId', 'lives', 'xp',
+          'unlockedLevel', 'coins', 'levelStars', 'levelHighScores',
+          'boosters', 'preBoosters', 'soundEnabled', 'musicEnabled',
+          'endlessBestWave', 'endlessBestScore', 'claimedRewards',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'playerName', 'avatarId', 'lives', 'xp',
+          'unlockedLevel', 'coins', 'levelStars', 'levelHighScores',
+          'boosters', 'preBoosters', 'soundEnabled', 'musicEnabled',
+          'endlessBestWave', 'endlessBestScore', 'claimedRewards',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId.size() <= 128
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.playerName is string
+        && data.playerName.size() >= 1
+        && data.playerName.size() <= 32
+        && data.avatarId is string
+        && data.avatarId in ['princess', 'crown', 'gummy', 'lollipop']
+        && data.lives is int
+        && data.lives >= 0
+        && data.lives <= 5
+        && data.xp is int
+        && data.xp >= 0
+        && data.unlockedLevel is int
+        && data.unlockedLevel >= 1
+        && data.unlockedLevel <= 360
+        && data.coins is int
+        && data.coins >= 0
+        && data.coins <= 10000000
+        && data.levelStars is map
+        && data.levelStars.size() <= 400
+        && data.levelHighScores is map
+        && data.levelHighScores.size() <= 400
+        && data.boosters is map
+        && data.boosters.keys().hasAll(['hammer', 'free_switch', 'color_bomb', 'cross_wand', 'sugar_shuffle'])
+        && data.boosters.keys().hasOnly(['hammer', 'free_switch', 'color_bomb', 'cross_wand', 'sugar_shuffle'])
+        && data.boosters.hammer is int && data.boosters.hammer >= 0
+        && data.boosters.free_switch is int && data.boosters.free_switch >= 0
+        && data.boosters.color_bomb is int && data.boosters.color_bomb >= 0
+        && data.boosters.cross_wand is int && data.boosters.cross_wand >= 0
+        && data.boosters.sugar_shuffle is int && data.boosters.sugar_shuffle >= 0
+        && data.preBoosters is map
+        && data.preBoosters.keys().hasAll(['striped_wrapped', 'color_bomb', 'extra_moves', 'golden_crown'])
+        && data.preBoosters.keys().hasOnly(['striped_wrapped', 'color_bomb', 'extra_moves', 'golden_crown'])
+        && data.preBoosters.striped_wrapped is int && data.preBoosters.striped_wrapped >= 0
+        && data.preBoosters.color_bomb is int && data.preBoosters.color_bomb >= 0
+        && data.preBoosters.extra_moves is int && data.preBoosters.extra_moves >= 0
+        && data.preBoosters.golden_crown is int && data.preBoosters.golden_crown >= 0
+        && data.soundEnabled is bool
+        && data.musicEnabled is bool
+        && data.endlessBestWave is int && data.endlessBestWave >= 0
+        && data.endlessBestScore is int && data.endlessBestScore >= 0
+        && data.claimedRewards is list
+        && data.claimedRewards.size() <= 30
+        && (data.claimedRewards.size() == 0 || data.claimedRewards[0] is string)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isVerifiedOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserSave(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserSave(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'playerName', 'avatarId', 'lives', 'xp', 'unlockedLevel',
+          'coins', 'levelStars', 'levelHighScores', 'boosters',
+          'preBoosters', 'soundEnabled', 'musicEnabled',
+          'endlessBestWave', 'endlessBestScore', 'claimedRewards',
+          'updatedAt', 'adViews', 'adEstimatedRevenueCents'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
